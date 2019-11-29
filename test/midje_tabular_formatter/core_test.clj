@@ -1,7 +1,72 @@
 (ns midje-tabular-formatter.core-test
-  (:require [clojure.test :refer :all]
-            [midje-tabular-formatter.core :refer :all]))
+  (:require [clojure.test :refer [deftest are]]
+            [midje-tabular-formatter.core :as formatter]))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(def unformatted-tabular-fact "
+(tabular
+  (fact \"The rules of Conway's life\"
+        (alive? ?cell-status ?neighbor-count) => ?expected)
+  ?cell-status ?neighbor-count ?expected
+    :alive 1 FALSEY
+  :alive 2 truthy
+   :alive 3 truthy
+  :alive 4 FALSEY
+
+  :dead 2 FALSEY
+  :dead 3 truthy
+  :dead 4 FALSEY)
+")
+
+
+(def formatted-tabular-fact "
+(tabular
+  (fact \"The rules of Conway's life\"
+        (alive? ?cell-status ?neighbor-count) => ?expected)
+  ?cell-status ?neighbor-count ?expected
+  :alive       1               FALSEY
+  :alive       2               truthy
+  :alive       3               truthy
+  :alive       4               FALSEY
+  :dead        2               FALSEY
+  :dead        3               truthy
+  :dead        4               FALSEY)
+")
+
+(def unformatted-1x3-table "
+(tabular
+  (fact
+    (int? ?number) => true)
+  ?number 1 2)
+")
+
+(def formatted-1x3-table "
+(tabular
+  (fact
+    (int? ?number) => true)
+  ?number
+  1
+  2)
+")
+
+(def unformatted-1x2-table "
+(tabular
+  (fact
+    (int? ?number) => true)
+  ?number 1)
+")
+
+(def formatted-1x2-table "
+(tabular
+  (fact
+    (int? ?number) => true)
+  ?number
+  1)
+")
+
+(deftest format-tabular-fact-test
+  (are [unformatted-fact formatted-fact]
+       (= (formatter/format-tables unformatted-fact) formatted-fact)
+       unformatted-tabular-fact formatted-tabular-fact
+       unformatted-1x3-table    formatted-1x3-table
+       unformatted-1x2-table    formatted-1x2-table))
+

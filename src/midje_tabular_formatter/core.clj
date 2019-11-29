@@ -2,9 +2,9 @@
   (:require
     [clojure.string]
     [rewrite-clj.custom-zipper.core :as custom-zipper]
+    [rewrite-clj.node :as node]
     [rewrite-clj.zip :as zip]
-    [rewrite-clj.zip.whitespace :as zip.whitespace]
-    ))
+    [rewrite-clj.zip.whitespace :as zip.whitespace]))
 
 (def example "
 (tabular
@@ -18,22 +18,37 @@
 232123  (+ 1 1) 23)
 ")
 
+(defn zmap [f zloc]
+  (let [modified-zloc (f zloc)]
+    (if-let [next-zloc (zip/right modified-zloc)]
+      (recur f next-zloc)
+      modified-zloc)))
+
+(defn zmap-indexed [f zloc]
+  (loop [zloc zloc
+         i 0]
+    (let [modified-zloc (f i zloc)]
+      (if-let [next-zloc (zip/right modified-zloc)]
+        (recur next-zloc (inc i))
+        modified-zloc))))
+
 (defn tabular? [zloc]
-  (and (list? (zip/sexpr zloc))
+  (and (not (node/printable-only? (zip/node zloc)))
+       (= :list (zip/tag zloc))
        (= 'tabular (zip/sexpr (zip/down zloc)))))
 
 (defn table-header? [s]
   (clojure.string/starts-with? s "?"))
 
-(defn column-count [entry-strings]
-  (count (take-while table-header? entry-strings)))
+(defn column-count [cell-strings]
+  (count (take-while table-header? cell-strings)))
 
 (defn every-nth [n coll]
   (->> (partition n coll)
        (apply interleave)
        (partition (/ (count coll) n))))
 
-(defn entry-strings [zloc]
+(defn cell-strings [zloc]
   (map zip/->string (take-while identity (iterate zip/right zloc))))
 
 (defn max-lengths [entry-strings column-count]
@@ -51,7 +66,6 @@
 (defn right-pad-to-length! [zloc length]
   (zip.whitespace/insert-space-right zloc (inc (- length (count (zip/->string zloc))))))
 
-
 (defn remove-table-whitespace! [zloc]
   (let [right-zloc (custom-zipper/right zloc)]
     (cond
@@ -59,68 +73,53 @@
       (#{:whitespace :newline} (zip/tag right-zloc)) (recur (zip/remove right-zloc))
       :else (recur right-zloc))))
 
-(defn root [zloc]
-  (if-let [parent (zip/up zloc)]
-    (recur parent)
-    zloc))
-
-(defn cell-type [entry-count column-count entry-index]
-  (cond
-    (zero? entry-index) :table-first
-    (= entry-index (dec entry-count)) :table-last
-    (zero? (mod entry-index column-count)) :column-first
-    (= column-count (inc (mod entry-index column-count))) :column-last
-    :else :middle))
+(defn cell-features [entry-count column-count entry-index]
+  {:table-first  (boolean (zero? entry-index))
+   :table-last   (boolean (= entry-index (dec entry-count)))
+   :column-first (boolean (zero? (mod entry-index column-count)))
+   :column-last  (boolean (= column-count (inc (mod entry-index column-count))))})
 
 (defn cell-whitespace-specs [indentation lengths entry-count column-count entry-index]
-  (let [cell-type (cell-type entry-count column-count entry-index)]
+  (let [cell-features (cell-features entry-count column-count entry-index)]
     (merge
-      (when-not (= :table-last cell-type)
+      (when-not (:column-last cell-features)
         {:length (nth lengths (mod entry-index column-count))})
-      (when (= :column-first cell-type)
+      (when (and (:column-first cell-features) (not (:table-first cell-features)))
         {:indentation indentation})
-      (when (= :column-last cell-type)
+      (when (and (:column-last cell-features) (not (:table-last cell-features)))
         {:newline true}))))
 
-(defn format-cell! [zloc {:keys [indentation length newline] :as x}]
-  (prn :format-cell! (zip/->string zloc) x)
+(defn format-cell [zloc {:keys [indentation length newline] :as x}]
   (cond->
     zloc
     indentation (zip.whitespace/insert-space-left indentation)
     newline (zip.whitespace/insert-newline-right)
     length (right-pad-to-length! length)))
 
-(defn insert-table-whitespace! [zloc]
+(defn insert-table-whitespace [zloc]
   (let [indentation (table-indentation zloc)
-        entry-strings (entry-strings zloc)
-        column-count (column-count entry-strings)
-        lengths (max-lengths entry-strings column-count)]
-    (loop [zloc zloc
-           i 0]
-      (let [modified-zloc (format-cell! zloc (cell-whitespace-specs indentation
-                                                                    lengths
-                                                                    (count entry-strings)
-                                                                    column-count
-                                                                    i))]
-        (if-let [next-zloc (zip/right modified-zloc)]
-          (recur next-zloc (inc i))
-          modified-zloc)))))
+        cell-strings (cell-strings zloc)
+        column-count (column-count cell-strings)
+        lengths (max-lengths cell-strings column-count)]
+    (zmap-indexed (fn [i zloc]
+                    (format-cell zloc (cell-whitespace-specs indentation
+                                                             lengths
+                                                             (count cell-strings)
+                                                             column-count
+                                                             i)))
+                  zloc)))
 
 (defn find-table-start [zloc]
   (zip/find-next (zip/down zloc) (comp table-header? zip/->string)))
 
-(defn format-table! [zloc]
+(defn format-table [zloc]
   (-> (find-table-start zloc)
       (remove-table-whitespace!)
-      (root)
+      (zip/find zip/up tabular?)
       (find-table-start)
-      (insert-table-whitespace!)))
+      (insert-table-whitespace)))
 
-(defn foo [s]
-  (zip/postwalk (zip/of-string s)
-                tabular?
-                format-table!))
-
-
-(println (zip/->root-string (foo example)))
-
+(defn format-tables [s]
+  (->> (zip/of-string s)
+       (zmap (fn [zloc] (zip/postwalk zloc tabular? format-table)))
+       (zip/->root-string)))
