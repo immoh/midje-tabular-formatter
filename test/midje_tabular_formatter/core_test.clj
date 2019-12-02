@@ -63,10 +63,28 @@
   1)
 ")
 
+(def unformatted-table-with-list "
+(tabular
+  (fact
+    (= ?expr ?evaluated) => true)
+  ?expr ?evaluated
+  (+ 1 1) 2
+  (+ 2 3)         5)
+")
+
+(def formatted-table-with-list "
+(tabular
+  (fact
+    (= ?expr ?evaluated) => true)
+  ?expr   ?evaluated
+  (+ 1 1) 2
+  (+ 2 3) 5)
+")
+
 (deftest format-tabular-fact-test
   (are [unformatted-fact formatted-fact]
        (= (formatter/format-tables unformatted-fact) formatted-fact)
-       unformatted-tabular-fact formatted-tabular-fact
-       unformatted-1x3-table    formatted-1x3-table
-       unformatted-1x2-table    formatted-1x2-table))
-
+       unformatted-tabular-fact    formatted-tabular-fact
+       unformatted-1x3-table       formatted-1x3-table
+       unformatted-1x2-table       formatted-1x2-table
+       unformatted-table-with-list formatted-table-with-list))

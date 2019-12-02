@@ -40,6 +40,9 @@
 (defn table-header? [s]
   (clojure.string/starts-with? s "?"))
 
+(defn find-table-start [zloc]
+  (zip/find-next (zip/down zloc) (comp table-header? zip/->string)))
+
 (defn column-count [cell-strings]
   (count (take-while table-header? cell-strings)))
 
@@ -70,7 +73,12 @@
   (let [right-zloc (custom-zipper/right zloc)]
     (cond
       (not right-zloc) zloc
-      (#{:whitespace :newline} (zip/tag right-zloc)) (recur (zip/remove right-zloc))
+      (#{:whitespace :newline} (zip/tag right-zloc)) (recur (-> right-zloc
+                                                                (zip/remove)
+                                                                ;; remove navigates to last node in depth order
+                                                                ;; therefore we need to start from beginning
+                                                                (zip/find zip/up tabular?)
+                                                                (find-table-start)))
       :else (recur right-zloc))))
 
 (defn cell-features [entry-count column-count entry-index]
@@ -108,9 +116,6 @@
                                                              column-count
                                                              i)))
                   zloc)))
-
-(defn find-table-start [zloc]
-  (zip/find-next (zip/down zloc) (comp table-header? zip/->string)))
 
 (defn format-table [zloc]
   (-> (find-table-start zloc)
