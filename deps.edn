@@ -1,2 +1,8 @@
-{:deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        rewrite-clj         {:mvn/version "0.6.1"}}}
+{:deps      {org.clojure/clojure {:mvn/version "1.10.1"}
+             rewrite-clj         {:mvn/version "0.6.1"}}
+ :aliases   {:test      {:extra-paths ["test"]
+                         :extra-deps  {midje        {:mvn/version "1.9.9"}
+                                       midje-runner {:git/url "git@github.com:miorimmax/midje-runner"
+                                                     :sha     "ee9c2813e150ae6b3ea41b446b09ba40fc89bdc1"}}
+                         :main-opts   ["-m" "midje-runner.runner"]}
+             :formatter {:main-opts ["-m" "midje-tabular-formatter.main"]}}}

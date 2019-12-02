@@ -1,8 +1,8 @@
 (ns midje-tabular-formatter.core-test
-  (:require [clojure.test :refer [deftest are]]
+  (:require [midje.sweet :refer :all]
             [midje-tabular-formatter.core :as formatter]))
 
-(def unformatted-tabular-fact "
+(def unformatted-table "
 (tabular
   (fact \"The rules of Conway's life\"
         (alive? ?cell-status ?neighbor-count) => ?expected)
@@ -18,7 +18,7 @@
 ")
 
 
-(def formatted-tabular-fact "
+(def formatted-table "
 (tabular
   (fact \"The rules of Conway's life\"
         (alive? ?cell-status ?neighbor-count) => ?expected)
@@ -81,10 +81,12 @@
   (+ 2 3) 5)
 ")
 
-(deftest format-tabular-fact-test
-  (are [unformatted-fact formatted-fact]
-       (= (formatter/format-tables unformatted-fact) formatted-fact)
-       unformatted-tabular-fact    formatted-tabular-fact
-       unformatted-1x3-table       formatted-1x3-table
-       unformatted-1x2-table       formatted-1x2-table
-       unformatted-table-with-list formatted-table-with-list))
+(tabular
+  (fact
+    "Unformatted tables are formatted"
+    (formatter/format-tables ?unformatted) => ?formatted)
+  ?unformatted                ?formatted
+  unformatted-table           formatted-table
+  unformatted-1x3-table       formatted-1x3-table
+  unformatted-1x2-table       formatted-1x2-table
+  unformatted-table-with-list formatted-table-with-list)
