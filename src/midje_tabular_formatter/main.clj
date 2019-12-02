@@ -34,7 +34,10 @@
                          (clojure.string/join "\n" (map (memfn getPath) modified-files)))})))
 
 (defn -main
-  "TODO"
+  "Finds Clojure files recusively from current location and formats Midje tabular fact tables
+   in them. Prints summary of checked and formatted files.
+
+   Returns with exit code 0 if all files were correctly formatted, otherwise returns with exit code 1."
   [& _]
   (let [{:keys [success? summary]} (format-files! ".")]
     (println summary)
