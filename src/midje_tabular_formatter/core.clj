@@ -6,18 +6,6 @@
     [rewrite-clj.zip :as zip]
     [rewrite-clj.zip.whitespace :as zip.whitespace]))
 
-(def example "
-(tabular
-  \"moioimoi\"
-  (fact
-    \"adad\"
-    1 => 1)
-  ?foo ?bar ?baz
-  1 2 3
-  123123234 2343  322342 ;; TODO
-232123  (+ 1 1) 23)
-")
-
 (defn zmap [f zloc]
   (let [modified-zloc (f zloc)]
     (if-let [next-zloc (zip/right modified-zloc)]
