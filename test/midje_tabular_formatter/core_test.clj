@@ -1,6 +1,7 @@
 (ns midje-tabular-formatter.core-test
-  (:require [midje.sweet :refer :all]
-            [midje-tabular-formatter.core :as formatter]))
+  (:require
+    [midje.sweet :refer :all]
+    [midje-tabular-formatter.core :as formatter]))
 
 (def unformatted-table "
 (tabular

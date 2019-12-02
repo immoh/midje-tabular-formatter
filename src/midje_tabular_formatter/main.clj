@@ -9,8 +9,8 @@
   (and (.isFile file)
        (re-matches #".+\.cljc?" (.getName file))))
 
-(defn find-clojure-files []
-  (->> (file-seq (io/file "."))
+(defn find-clojure-files [path]
+  (->> (file-seq (io/file path))
        (filter clojure-file?)
        (sort-by (memfn getAbsolutePath))))
 
@@ -21,13 +21,22 @@
       (spit file modified-source)
       true)))
 
-(defn -main [& _]
-  (let [files (find-clojure-files)
+(defn format-files! [path]
+  (let [files (find-clojure-files path)
         modified-files (doall (filter format-file! files))]
     (if (zero? (count modified-files))
-      (println (format "Checked %s files, all fine." (count files)))
-      (do
-        (println (format "Checked %s files, formatted %s files:" (count files) (count modified-files)))
-        (doseq [file modified-files]
-          (println (.getPath file)))
-        (System/exit 1)))))
+      {:success? true
+       :summary  (format "Checked %s files, all fine." (count files))}
+      {:success? false
+       :summary  (format "Checked %s files, formatted %s files:\n%s"
+                         (count files)
+                         (count modified-files)
+                         (clojure.string/join "\n" (map (memfn getPath) modified-files)))})))
+
+(defn -main
+  "TODO"
+  [& _]
+  (let [{:keys [success? summary]} (format-files! ".")]
+    (println summary)
+    (when-not success?
+      (System/exit 1))))
