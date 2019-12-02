@@ -48,7 +48,7 @@
        (every-nth column-count)
        (map (partial reduce max))))
 
-(defn- table-indentation [zloc]
+(defn table-indentation [zloc]
   (or (let [left-zloc (custom-zipper/left zloc)]
         (when (= (zip/tag left-zloc) :whitespace)
           (count (zip/->string left-zloc))))
@@ -85,7 +85,7 @@
       (when (and (:column-last cell-features) (not (:table-last cell-features)))
         {:newline true}))))
 
-(defn format-cell [zloc {:keys [indentation length newline] :as x}]
+(defn format-cell [zloc {:keys [indentation length newline]}]
   (cond->
     zloc
     indentation (zip.whitespace/insert-space-left indentation)
@@ -106,13 +106,22 @@
                   zloc)))
 
 (defn format-table [zloc]
+  "Format single tabular fact form
+
+  Parameters:
+    zloc - zipper node of tabular form `(tabular ..)`"
   (-> (find-table-start zloc)
       (remove-table-whitespace!)
       (zip/find zip/up tabular?)
       (find-table-start)
       (insert-table-whitespace)))
 
-(defn format-tables [s]
+(defn format-tables
+  "Formats all Midje tabular fact tables in the given string.
+
+  Parameters:
+    s - string to format"
+  [s]
   (->> (zip/of-string s)
        (zmap (fn [zloc] (zip/postwalk zloc tabular? format-table)))
        (zip/->root-string)))
