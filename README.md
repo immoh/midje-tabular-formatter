@@ -93,7 +93,7 @@ There's also lower-level API that deals with strings:
 (tabular
   (fact ?foo => 1)
   ?foo 1)"))
-
+;; prints:
 (tabular
   (fact ?foo => 1)
   ?foo
