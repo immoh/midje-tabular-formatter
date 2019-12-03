@@ -50,7 +50,7 @@ Or add it as an alias in your `deps.edn` file:
 ```clojure
 {:aliases {:formatter {:extra-deps {midje-tabular-formatter {:mvn/version "0.1.0-SNAPSHOT"}}
                        :main-opts  ["-m" "midje-tabular-formatter.main"]}}}
-``
+```
 
 and run with:
 
