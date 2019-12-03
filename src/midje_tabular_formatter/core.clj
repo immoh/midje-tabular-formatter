@@ -105,11 +105,12 @@
                                                              i)))
                   zloc)))
 
-(defn format-table [zloc]
+(defn format-table
   "Format single tabular fact form
 
   Parameters:
     zloc - zipper node of tabular form `(tabular ..)`"
+  [zloc]
   (-> (find-table-start zloc)
       (remove-table-whitespace!)
       (zip/find zip/up tabular?)
