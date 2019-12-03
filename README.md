@@ -33,10 +33,9 @@ into this:
   :dead        2               FALSEY
   :dead        3               truthy
   :dead        4               FALSEY)
-``
+```
 
 ## Usage
-
 
 ### tools.deps
 
