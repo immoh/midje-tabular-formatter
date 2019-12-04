@@ -42,13 +42,13 @@ into this:
 Use this one liner:
 
 ```
-clojure -Sdeps '{:deps {midje-tabular-formatter {:mvn/version "0.1.0-SNAPSHOT"}}}' -m midje-tabular-formatter.main
+clojure -Sdeps '{:deps {midje-tabular-formatter {:mvn/version "0.1.0"}}}' -m midje-tabular-formatter.main
 ```
 
 Or add it as an alias in your `deps.edn` file:
 
 ```clojure
-{:aliases {:formatter {:extra-deps {midje-tabular-formatter {:mvn/version "0.1.0-SNAPSHOT"}}
+{:aliases {:formatter {:extra-deps {midje-tabular-formatter {:mvn/version "0.1.0"}}
                        :main-opts  ["-m" "midje-tabular-formatter.main"]}}}
 ```
 
@@ -63,7 +63,7 @@ clojure -Aformatter
 Add dependency and alias to `project.clj` or `.lein/profiles.clj`:
 
 ```clojure
-{:dependencies [[midje-tabular-formatter "0.1.0-SNAPSHOT"]]
+{:dependencies [[midje-tabular-formatter "0.1.0"]]
  :aliases      {"format-tables" ["run" "-m" "midje-tabular-formatter.main"]}}
 ```
 
