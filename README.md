@@ -1,4 +1,4 @@
-# midje-tabular-formatter
+# midje-tabular-formatter [![CircleCI](https://circleci.com/gh/immoh/midje-tabular-formatter/tree/master.svg?style=svg)](https://circleci.com/gh/immoh/midje-tabular-formatter/tree/master)
 
 Tool for formatting [Midje](https://github.com/marick/Midje) [tabular facts](https://github.com/marick/Midje/wiki/Tabular-facts).
 
